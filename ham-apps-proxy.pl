@@ -5,7 +5,7 @@ use warnings;
 
 $| = 1;
 
-my $VER         = '24.05.25';
+my $VER         = '24.08.14';
 my $ETIMEDOUT   = 260;
 my $EWOULDBLOCK = 11;
 
@@ -400,10 +400,12 @@ OMNIRIG CONSTANTS
 
 # http://www.n3fjp.com/help/api.html
 # requires v1.7 for <UPDATEANDLOG>
+# <CMD><UPDATE><CONTROL>TXTENTRYCOMMENTS</CONTROL><VALUE>" . $p{"COMMENTS"} . "</VALUE></CMD>
 # <CMD><UPDATEANDLOG><CALL>WC3N</CALL><BAND>20</BAND><MODE>FT8</MODE><FREQ>14.074<RSTR>599</RSTR><RSTS>488</RSTS><GRID>FM19</GRID><POWER>100</POWER><DATE>2021/04/25</DATE><TIMEON>12:34</TIMEON><TIMEOFF>13:03</TIMEOFF></CMD>
 
 # <CMD><CHANGEFREQ><VALUE>21.446</VALUE><SUPPRESSMODEDEFAULT>TRUE</SUPPRESSMODEDEFAULT></CMD>
 # <CMD><CHANGEMODE><VALUE>RTTY</VALUE></CMD>
+
         my $cgi = shift;
         return if !ref $cgi;
 
@@ -413,7 +415,13 @@ OMNIRIG CONSTANTS
         my $host       = delete $p{__host} || 'localhost';
         my $port       = delete $p{__port} || 1100;
         my $parameters = join '', map { MARKUPTAG( uc($_), $p{$_} ) } @k;
-        my $msg =
+        my $msg        = '';
+        if (exists $p{'COMMENTS'}) {
+            #aclog needs the comments set before the update and log command
+            $msg .= "<CMD><UPDATE><CONTROL>TXTENTRYCOMMENTS</CONTROL><VALUE>" . $p{"COMMENTS"} . "</VALUE></CMD>\r\n"
+        }
+        
+        $msg .= 
           MARKUPTAG( 'CMD', "<" . uc($command) . ">$parameters" ) . "\r\n";
         my ( $ok, $response ) = writeINET( 'tcp', $host, $port, $msg );
 
